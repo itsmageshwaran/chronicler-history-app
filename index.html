@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Chronicler — Learn History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --gold:#C9A84C;--gold-light:#F0D080;--gold-dark:#8B6914;--gold-dim:#5A4010;
+  --parchment:#F5EDD8;--parchment-dark:#E8D9B5;
+  --ink:#1A1208;
+  --crimson:#8B1A1A;--crimson-light:#C23B3B;
+  --forest:#1A3A1A;--forest-light:#2D6A2D;
+  --navy:#0D1B3E;--navy-light:#1A3070;
+  --stone:#6B5E4E;--stone-light:#9B8B78;--stone-dim:#3D3020;
+  --bg:#0E0C08;--bg2:#141108;
+  --panel:#1C1812;--panel2:#242018;--panel3:#2C2820;
+  --border:#3A3020;--border2:#4A4030;
+  --success:#2D6A2D;--success-light:#3D9A3D;
+  --danger:#8B1A1A;--danger-light:#C23B3B;
+  --xp:#8B4513;--xp-light:#CD6720;
+}
+html,body{height:100%;overflow:hidden;font-family:'Crimson Pro',Georgia,serif;background:var(--bg);color:var(--parchment)}
+#app{width:100%;max-width:430px;height:100vh;max-height:100vh;margin:0 auto;display:flex;flex-direction:column;position:relative;overflow:hidden;background:var(--bg)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+
+/* ── SCREENS ── */
+.screen{display:none;flex-direction:column;height:100%;overflow:hidden}
+.screen.active{display:flex}
+
+/* ── SCROLL AREA ── */
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.scroll-area::-webkit-scrollbar{width:3px}
+.scroll-area::-webkit-scrollbar-track{background:transparent}
+.scroll-area::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ── BOTTOM NAV ── */
+.nav-bar{display:flex;background:var(--panel);border-top:1px solid var(--border);padding:.4rem 0 max(.4rem,env(safe-area-inset-bottom));flex-shrink:0}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:.2rem;cursor:pointer;padding:.35rem .5rem;border:none;background:none;color:var(--stone-light);transition:all .15s}
+.nav-item.active{color:var(--gold)}
+.nav-item:active{transform:scale(.93)}
+.nav-icon{font-size:1.4rem;line-height:1}
+.nav-label{font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.05em;text-transform:uppercase}
+
+/* ── SHARED COMPONENTS ── */
+.page-header{background:var(--panel);border-bottom:1px solid var(--border);padding:.9rem 1.1rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.page-title{font-family:'Cinzel',serif;font-size:1rem;color:var(--gold);letter-spacing:.06em}
+.xp-bar-wrap{height:5px;background:var(--panel3);border-radius:3px;overflow:hidden}
+.xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold-dark),var(--gold));border-radius:3px;transition:width .6s ease}
+.badge{display:inline-flex;align-items:center;gap:.25rem;border-radius:20px;padding:.2rem .6rem;font-size:.72rem;font-family:'Cinzel',serif;letter-spacing:.04em}
+.badge-gold{background:rgba(201,168,76,.12);border:1px solid var(--gold-dim);color:var(--gold)}
+.badge-green{background:rgba(45,106,45,.2);border:1px solid var(--forest-light);color:#5DBD5D}
+.badge-red{background:rgba(139,26,26,.2);border:1px solid var(--crimson);color:var(--crimson-light)}
+.badge-blue{background:rgba(26,48,112,.3);border:1px solid #2A4090;color:#6090E0}
+.pill{display:inline-block;padding:.15rem .5rem;border-radius:3px;font-size:.7rem;font-family:'Cinzel',serif}
+.btn{font-family:'Cinzel',serif;font-weight:600;letter-spacing:.08em;border:none;border-radius:5px;cursor:pointer;transition:all .18s;text-transform:uppercase;font-size:.8rem}
+.btn:active{transform:scale(.96)}
+.btn-gold{background:linear-gradient(135deg,var(--gold-dark) 0%,var(--gold) 60%,var(--gold-light) 100%);color:var(--ink);padding:.8rem 1.6rem;box-shadow:0 2px 12px rgba(201,168,76,.3)}
+.btn-gold:hover{box-shadow:0 4px 20px rgba(201,168,76,.5)}
+.btn-outline{background:transparent;border:1.5px solid var(--border2);color:var(--stone-light);padding:.75rem 1.4rem}
+.btn-outline:hover{border-color:var(--gold-dark);color:var(--gold)}
+.btn-ghost{background:transparent;color:var(--stone-light);padding:.5rem .8rem}
+.btn-ghost:hover{color:var(--gold)}
+.divider{height:1px;background:var(--border);margin:1rem 0}
+.ornament{text-align:center;color:var(--gold-dim);font-size:1rem;letter-spacing:.3em;margin:.5rem 0}
+
+/* ═══════════════════════════════════
+   SCREEN: HOME / SPLASH
+═══════════════════════════════════ */
+#screen-home{
+  background:radial-gradient(ellipse at 50% -10%,#2D1F00 0%,var(--bg) 65%);
+  align-items:center;justify-content:center;position:relative;overflow:hidden;
+}
+.stars{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.star{position:absolute;border-radius:50%;animation:twinkle var(--d,3s) var(--del,0s) infinite alternate}
+@keyframes twinkle{from{opacity:.1}to{opacity:.85}}
+.home-inner{display:flex;flex-direction:column;align-items:center;padding:2rem 1.5rem;width:100%;max-width:320px;z-index:1}
+.crest-svg{width:90px;height:90px;margin-bottom:1.2rem;filter:drop-shadow(0 0 20px rgba(201,168,76,.4))}
+.home-title{font-family:'Cinzel',serif;font-size:2.4rem;font-weight:700;color:var(--gold);letter-spacing:.14em;text-align:center;line-height:1;text-shadow:0 0 40px rgba(201,168,76,.35)}
+.home-subtitle{font-size:1rem;color:var(--stone-light);text-align:center;margin:.6rem 0 2rem;font-style:italic;font-weight:300;letter-spacing:.03em}
+.home-divider{width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim),transparent);margin-bottom:2rem}
+.home-actions{width:100%;display:flex;flex-direction:column;gap:.75rem}
+.player-strip{display:flex;align-items:center;gap:.75rem;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:.7rem 1rem;width:100%;margin-bottom:1.5rem}
+.avatar-ring{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--gold-dark),var(--gold));display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700;color:var(--ink);flex-shrink:0;border:2px solid var(--gold-dim)}
+.strip-info{flex:1;min-width:0}
+.strip-name{font-family:'Cinzel',serif;font-size:.85rem;color:var(--gold);font-weight:600}
+.strip-meta{font-size:.75rem;color:var(--stone-light);margin-top:.15rem}
+.strip-xp{font-family:'Cinzel',serif;font-size:.72rem;color:var(--gold-dark);background:rgba(201,168,76,.1);border:1px solid var(--gold-dim);border-radius:3px;padding:.15rem .45rem;white-space:nowrap}
+
+/* ═══════════════════════════════════
+   SCREEN: LEARN (lesson list)
+═══════════════════════════════════ */
+#screen-learn{background:var(--bg)}
+.learn-hero{background:linear-gradient(160deg,#1A1200 0%,var(--panel) 100%);border-bottom:1px solid var(--border);padding:1rem 1.1rem 1.2rem}
+.learn-hero-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem}
+.streak-chip{display:flex;align-items:center;gap:.3rem;background:rgba(201,168,76,.1);border:1px solid var(--gold-dim);border-radius:20px;padding:.28rem .7rem;font-size:.78rem;color:var(--gold);font-family:'Cinzel',serif}
+.level-chip{background:var(--panel2);border:1px solid var(--border2);border-radius:6px;padding:.35rem .8rem;text-align:center}
+.level-num{font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700;color:var(--gold);line-height:1}
+.level-label{font-size:.6rem;color:var(--stone-light);letter-spacing:.08em;text-transform:uppercase}
+.xp-section{margin-top:.1rem}
+.xp-label-row{display:flex;justify-content:space-between;margin-bottom:.35rem}
+.xp-text{font-size:.72rem;color:var(--stone-light)}
+.daily-challenge-banner{background:linear-gradient(135deg,var(--crimson) 0%,#4A0D0D 100%);border:1px solid var(--crimson-light);border-radius:8px;padding:.8rem 1rem;margin:1rem 1.1rem .25rem;cursor:pointer;display:flex;align-items:center;gap:.8rem;transition:all .18s}
+.daily-challenge-banner:active{transform:scale(.98)}
+.dc-icon{font-size:1.8rem;flex-shrink:0}
+.dc-body{flex:1}
+.dc-title{font-family:'Cinzel',serif;font-size:.85rem;color:#FFB8B8;letter-spacing:.05em;font-weight:600}
+.dc-sub{font-size:.75rem;color:rgba(255,184,184,.7);margin-top:.1rem}
+.dc-arrow{color:rgba(255,184,184,.5);font-size:1.1rem}
+.era-section{padding:.9rem 1.1rem .3rem}
+.era-head{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.15em;color:var(--stone-light);text-transform:uppercase;margin-bottom:.6rem;display:flex;align-items:center;gap:.5rem}
+.era-head::after{content:'';flex:1;height:1px;background:var(--border)}
+.lesson-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:.9rem 1rem;margin-bottom:.6rem;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;display:flex;align-items:flex-start;gap:.75rem}
+.lesson-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+.lesson-card.era-ancient::before{background:linear-gradient(to bottom,var(--gold),var(--gold-dark))}
+.lesson-card.era-medieval::before{background:linear-gradient(to bottom,#C23B3B,#6B1A1A)}
+.lesson-card.era-renaissance::before{background:linear-gradient(to bottom,#2D8B5A,#1A5A35)}
+.lesson-card.era-modern::before{background:linear-gradient(to bottom,#4070D4,#1A3070)}
+.lesson-card:not(.locked):hover,.lesson-card:not(.locked):active{border-color:var(--gold-dim);transform:translateX(2px)}
+.lesson-card.locked{opacity:.4;cursor:not-allowed}
+.lesson-card.done{border-color:var(--forest-light)}
+.lc-icon{width:44px;height:44px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;background:var(--panel2)}
+.lc-body{flex:1;min-width:0}
+.lc-title{font-family:'Cinzel',serif;font-size:.85rem;color:var(--parchment);font-weight:600;margin-bottom:.2rem;line-height:1.25}
+.lc-sub{font-size:.78rem;color:var(--stone-light);font-style:italic;line-height:1.3}
+.lc-meta{display:flex;align-items:center;gap:.5rem;margin-top:.45rem}
+.lc-time{font-size:.68rem;color:var(--stone);display:flex;align-items:center;gap:.2rem}
+.lc-xp{font-size:.68rem;background:rgba(201,168,76,.1);color:var(--gold-dark);border:1px solid var(--gold-dim);border-radius:3px;padding:.1rem .35rem;font-family:'Cinzel',serif}
+.lc-done{color:var(--forest-light);font-size:.9rem}
+.lc-lock{color:var(--stone);font-size:.9rem}
+
+/* ═══════════════════════════════════
+   SCREEN: LESSON READER
+═══════════════════════════════════ */
+#screen-lesson{background:var(--bg2)}
+.lesson-top-bar{background:var(--panel);border-bottom:1px solid var(--border);padding:.7rem 1rem;display:flex;align-items:center;gap:.75rem;flex-shrink:0}
+.progress-dots{display:flex;gap:.35rem;flex:1;justify-content:center}
+.pdot{width:8px;height:8px;border-radius:50%;background:var(--border2);transition:all .3s}
+.pdot.done{background:var(--forest-light)}
+.pdot.active{background:var(--gold);width:20px;border-radius:4px}
+.lesson-content{flex:1;overflow-y:auto;padding:1.4rem 1.2rem;-webkit-overflow-scrolling:touch}
+.scene-label{font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.2em;color:var(--stone);text-transform:uppercase;margin-bottom:.6rem}
+.scene-title{font-family:'Cinzel',serif;font-size:1.3rem;color:var(--gold);font-weight:700;line-height:1.2;margin-bottom:.8rem}
+.scene-visual{width:100%;height:140px;border-radius:8px;margin-bottom:1rem;display:flex;align-items:center;justify-content:center;font-size:4rem;position:relative;overflow:hidden;background:var(--panel2);border:1px solid var(--border)}
+.scene-body{font-size:1.05rem;color:var(--parchment-dark);line-height:1.75;font-weight:300}
+.scene-body p{margin-bottom:.9rem}
+.scene-body strong{color:var(--gold-light);font-weight:600}
+.scene-body em{color:var(--stone-light);font-style:italic}
+.choice-section{margin-top:1.2rem}
+.choice-label{font-family:'Cinzel',serif;font-size:.75rem;letter-spacing:.12em;color:var(--stone-light);text-transform:uppercase;margin-bottom:.7rem;text-align:center}
+.choice-btn{width:100%;background:var(--panel);border:1px solid var(--border2);border-radius:7px;padding:.85rem 1rem;margin-bottom:.5rem;cursor:pointer;text-align:left;color:var(--parchment-dark);font-family:'Crimson Pro',serif;font-size:.95rem;line-height:1.4;transition:all .18s;display:flex;align-items:center;gap:.7rem}
+.choice-btn:hover,.choice-btn:active{border-color:var(--gold-dark);background:var(--panel2);color:var(--parchment)}
+.choice-btn.chosen-good{border-color:var(--forest-light);background:rgba(45,106,45,.1);color:#7DD87D;pointer-events:none}
+.choice-btn.chosen-bad{border-color:var(--crimson);background:rgba(139,26,26,.1);color:#E07070;pointer-events:none}
+.choice-marker{width:28px;height:28px;border-radius:50%;background:var(--panel2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;font-family:'Cinzel',serif;color:var(--stone-light)}
+.choice-outcome{background:var(--panel2);border-left:3px solid var(--gold);border-radius:0 6px 6px 0;padding:.8rem 1rem;margin-top:.6rem;font-size:.88rem;color:var(--parchment-dark);line-height:1.5;font-style:italic}
+.lesson-footer{background:var(--panel);border-top:1px solid var(--border);padding:.9rem 1.2rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.continue-btn{background:linear-gradient(135deg,var(--gold-dark),var(--gold));color:var(--ink);font-family:'Cinzel',serif;font-weight:700;font-size:.82rem;letter-spacing:.1em;padding:.75rem 1.6rem;border:none;border-radius:5px;cursor:pointer;text-transform:uppercase;transition:all .18s}
+.continue-btn:hover{box-shadow:0 3px 14px rgba(201,168,76,.4)}
+.continue-btn:active{transform:scale(.96)}
+.xp-earned{display:flex;align-items:center;gap:.4rem;font-family:'Cinzel',serif;font-size:.8rem;color:var(--gold-dark)}
+
+/* ═══════════════════════════════════
+   SCREEN: QUIZ
+═══════════════════════════════════ */
+#screen-quiz{background:var(--bg2)}
+.quiz-header{background:var(--panel);border-bottom:1px solid var(--border);padding:.9rem 1.1rem;flex-shrink:0}
+.quiz-progress-bar{height:4px;background:var(--panel3);border-radius:2px;overflow:hidden;margin-top:.7rem}
+.quiz-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold-dark),var(--gold));border-radius:2px;transition:width .4s}
+.quiz-body{flex:1;overflow-y:auto;padding:1.3rem 1.2rem}
+.quiz-q-num{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.15em;color:var(--stone);text-transform:uppercase;margin-bottom:.5rem}
+.quiz-question{font-size:1.15rem;color:var(--parchment);line-height:1.55;font-weight:400;margin-bottom:1.3rem}
+.quiz-options{display:flex;flex-direction:column;gap:.55rem}
+.quiz-opt{background:var(--panel);border:1.5px solid var(--border2);border-radius:8px;padding:.85rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.75rem;transition:all .18s;font-size:.95rem;color:var(--parchment-dark);line-height:1.35}
+.quiz-opt:hover{border-color:var(--gold-dark);background:var(--panel2)}
+.quiz-opt.correct{border-color:var(--forest-light);background:rgba(45,106,45,.15);color:#7DD87D;pointer-events:none}
+.quiz-opt.wrong{border-color:var(--crimson);background:rgba(139,26,26,.15);color:#E07070;pointer-events:none}
+.quiz-opt.dimmed{opacity:.45;pointer-events:none}
+.quiz-letter{width:30px;height:30px;border-radius:50%;background:var(--panel2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:.78rem;font-weight:600;flex-shrink:0;color:var(--stone-light)}
+.quiz-opt.correct .quiz-letter{background:rgba(45,106,45,.3);border-color:var(--forest-light);color:#7DD87D}
+.quiz-opt.wrong .quiz-letter{background:rgba(139,26,26,.3);border-color:var(--crimson);color:#E07070}
+.quiz-feedback{margin-top:1rem;background:var(--panel2);border-radius:8px;padding:.9rem 1rem;font-size:.9rem;color:var(--parchment-dark);line-height:1.5;display:none}
+.quiz-feedback.show{display:block;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.quiz-footer{background:var(--panel);border-top:1px solid var(--border);padding:.9rem 1.2rem;flex-shrink:0;display:flex;gap:.75rem}
+
+/* ═══════════════════════════════════
+   SCREEN: LESSON COMPLETE
+═══════════════════════════════════ */
+#screen-complete{background:radial-gradient(ellipse at 50% 20%,#1E1400 0%,var(--bg) 65%);align-items:center;justify-content:center}
+.complete-inner{display:flex;flex-direction:column;align-items:center;padding:2rem 1.5rem;width:100%;text-align:center}
+.trophy-ring{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--gold-dark),var(--gold));display:flex;align-items:center;justify-content:center;font-size:3rem;margin-bottom:1.2rem;box-shadow:0 0 40px rgba(201,168,76,.4);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 40px rgba(201,168,76,.3)}50%{box-shadow:0 0 60px rgba(201,168,76,.6)}}
+.complete-title{font-family:'Cinzel',serif;font-size:1.6rem;color:var(--gold);font-weight:700;margin-bottom:.4rem}
+.complete-sub{font-size:.9rem;color:var(--stone-light);font-style:italic;margin-bottom:1.5rem}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;width:100%;margin-bottom:1.5rem}
+.stat-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:.8rem .5rem;text-align:center}
+.stat-val{font-family:'Cinzel',serif;font-size:1.2rem;color:var(--gold);font-weight:700;display:block}
+.stat-label{font-size:.65rem;color:var(--stone-light);text-transform:uppercase;letter-spacing:.08em;margin-top:.2rem;display:block}
+.xp-gain-bar{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:1.5rem}
+.xp-gain-label{font-family:'Cinzel',serif;font-size:.75rem;color:var(--gold);margin-bottom:.5rem;display:flex;justify-content:space-between}
+.complete-actions{width:100%;display:flex;flex-direction:column;gap:.65rem}
+
+/* ═══════════════════════════════════
+   SCREEN: SKILL TREE
+═══════════════════════════════════ */
+#screen-tree{background:var(--bg)}
+.tree-header{background:var(--panel);border-bottom:1px solid var(--border);padding:.9rem 1.1rem;flex-shrink:0}
+.tree-tabs{display:flex;gap:.4rem;margin-top:.8rem;overflow-x:auto;padding-bottom:.1rem}
+.tree-tab{font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.08em;padding:.35rem .8rem;border-radius:20px;border:1px solid var(--border2);color:var(--stone-light);cursor:pointer;white-space:nowrap;background:transparent;text-transform:uppercase;transition:all .15s}
+.tree-tab.active{background:rgba(201,168,76,.15);border-color:var(--gold-dark);color:var(--gold)}
+.tree-scroll{flex:1;overflow:auto;padding:1.2rem 1rem}
+.tree-era{margin-bottom:2rem}
+.era-title{font-family:'Cinzel',serif;font-size:.9rem;color:var(--gold);margin-bottom:1rem;display:flex;align-items:center;gap:.6rem}
+.era-title::before{content:'';width:24px;height:1px;background:var(--gold-dark)}
+.era-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.tree-nodes{display:flex;flex-wrap:wrap;gap:.6rem}
+.tree-node{width:calc(50% - .3rem);background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:.75rem;cursor:pointer;transition:all .2s;position:relative}
+.tree-node:active{transform:scale(.97)}
+.tree-node.unlocked{border-color:var(--gold-dim)}
+.tree-node.mastered{border-color:var(--forest-light)}
+.tree-node.locked{opacity:.38;cursor:not-allowed}
+.tree-node.unlocked:hover{border-color:var(--gold);box-shadow:0 0 12px rgba(201,168,76,.15)}
+.tn-icon{font-size:1.8rem;margin-bottom:.4rem}
+.tn-name{font-family:'Cinzel',serif;font-size:.78rem;color:var(--parchment);line-height:1.2;margin-bottom:.3rem}
+.tn-progress{height:3px;background:var(--panel3);border-radius:2px;overflow:hidden;margin-top:.5rem}
+.tn-fill{height:100%;border-radius:2px}
+.tn-fill.ancient{background:linear-gradient(90deg,var(--gold-dark),var(--gold))}
+.tn-fill.medieval{background:linear-gradient(90deg,#8B1A1A,#C23B3B)}
+.tn-fill.renaissance{background:linear-gradient(90deg,#1A5A35,#2D8B5A)}
+.tn-fill.modern{background:linear-gradient(90deg,#1A3070,#4070D4)}
+.tn-status{position:absolute;top:.5rem;right:.5rem;font-size:.75rem}
+.lock-icon{font-size:.75rem;color:var(--stone)}
+
+/* ═══════════════════════════════════
+   SCREEN: DAILY CHALLENGE
+═══════════════════════════════════ */
+#screen-daily{background:var(--bg2)}
+.daily-hero{background:linear-gradient(160deg,#2D0808 0%,#1A0A0A 50%,var(--panel) 100%);border-bottom:1px solid #5A1010;padding:1.2rem 1.1rem}
+.daily-hero-title{font-family:'Cinzel',serif;font-size:1.3rem;color:#FFB8B8;font-weight:700;letter-spacing:.06em;margin-bottom:.3rem}
+.daily-hero-sub{font-size:.82rem;color:rgba(255,184,184,.6);margin-bottom:.9rem}
+.timer-strip{display:flex;align-items:center;gap:.5rem;background:rgba(139,26,26,.2);border:1px solid #5A1010;border-radius:6px;padding:.5rem .8rem}
+.timer-val{font-family:'Cinzel',serif;font-size:1rem;color:#FFB8B8;font-weight:600;letter-spacing:.06em}
+.timer-label{font-size:.7rem;color:rgba(255,184,184,.5)}
+.daily-scroll{flex:1;overflow-y:auto;padding:1rem 1.1rem}
+.challenge-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:.8rem;cursor:pointer;transition:all .18s;display:flex;gap:.9rem;align-items:flex-start}
+.challenge-card:active{transform:scale(.98)}
+.challenge-card.active-challenge{border-color:var(--crimson-light)}
+.cc-icon{width:46px;height:46px;border-radius:8px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0}
+.cc-body{flex:1;min-width:0}
+.cc-title{font-family:'Cinzel',serif;font-size:.85rem;color:var(--parchment);margin-bottom:.25rem;font-weight:600}
+.cc-sub{font-size:.8rem;color:var(--stone-light);font-style:italic;margin-bottom:.5rem;line-height:1.3}
+.cc-rewards{display:flex;gap:.4rem;flex-wrap:wrap}
+.leaderboard-section{margin-top:1rem}
+.lb-title{font-family:'Cinzel',serif;font-size:.82rem;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.7rem;display:flex;align-items:center;gap:.5rem}
+.lb-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.lb-row{display:flex;align-items:center;gap:.75rem;padding:.6rem .8rem;border-radius:7px;margin-bottom:.35rem;background:var(--panel);border:1px solid var(--border);transition:all .15s}
+.lb-row.you{border-color:var(--gold-dim);background:rgba(201,168,76,.06)}
+.lb-rank{font-family:'Cinzel',serif;font-size:.9rem;font-weight:700;width:24px;text-align:center;flex-shrink:0}
+.lb-rank.top1{color:#FFD700}
+.lb-rank.top2{color:#C0C0C0}
+.lb-rank.top3{color:#CD7F32}
+.lb-rank.other{color:var(--stone)}
+.lb-avatar{width:32px;height:32px;border-radius:50%;background:var(--panel2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:.72rem;color:var(--stone-light);flex-shrink:0}
+.lb-name{flex:1;font-size:.88rem;color:var(--parchment-dark)}
+.lb-score{font-family:'Cinzel',serif;font-size:.82rem;color:var(--gold);font-weight:600}
+.lb-streak{font-size:.72rem;color:var(--stone-light)}
+
+/* ═══════════════════════════════════
+   SCREEN: PROFILE
+═══════════════════════════════════ */
+#screen-profile{background:var(--bg)}
+.profile-hero{background:linear-gradient(160deg,#1A1400 0%,var(--panel) 100%);border-bottom:1px solid var(--border);padding:1.3rem 1.1rem 1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center}
+.profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--gold-dark),var(--gold));display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:1.8rem;font-weight:700;color:var(--ink);margin-bottom:.8rem;border:3px solid var(--gold-dim);box-shadow:0 0 20px rgba(201,168,76,.25)}
+.profile-name{font-family:'Cinzel',serif;font-size:1.2rem;color:var(--gold);font-weight:700}
+.profile-title{font-size:.82rem;color:var(--stone-light);font-style:italic;margin-top:.2rem}
+.profile-level{font-family:'Cinzel',serif;font-size:.78rem;color:var(--gold-dark);background:rgba(201,168,76,.1);border:1px solid var(--gold-dim);border-radius:20px;padding:.25rem .8rem;margin-top:.6rem}
+.profile-scroll{flex:1;overflow-y:auto;padding:1rem 1.1rem}
+.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1.2rem}
+.ps-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:.8rem .4rem;text-align:center}
+.ps-val{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--gold);font-weight:700;display:block}
+.ps-label{font-size:.63rem;color:var(--stone-light);text-transform:uppercase;letter-spacing:.07em;display:block;margin-top:.15rem}
+.achievement-section{margin-bottom:1.2rem}
+.section-head{font-family:'Cinzel',serif;font-size:.78rem;letter-spacing:.12em;color:var(--stone-light);text-transform:uppercase;margin-bottom:.7rem;display:flex;align-items:center;gap:.5rem}
+.section-head::after{content:'';flex:1;height:1px;background:var(--border)}
+.achievements-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.55rem}
+.ach-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:.75rem;display:flex;gap:.65rem;align-items:flex-start;transition:all .15s}
+.ach-card.earned{border-color:var(--gold-dim)}
+.ach-card.locked{opacity:.4}
+.ach-icon{font-size:1.5rem;flex-shrink:0}
+.ach-name{font-family:'Cinzel',serif;font-size:.72rem;color:var(--parchment);line-height:1.2;margin-bottom:.15rem}
+.ach-desc{font-size:.65rem;color:var(--stone-light);line-height:1.3}
+.history-list{display:flex;flex-direction:column;gap:.45rem}
+.hist-item{background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:.65rem .85rem;display:flex;align-items:center;gap:.7rem}
+.hist-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.hist-title{font-size:.85rem;color:var(--parchment-dark);flex:1}
+.hist-xp{font-family:'Cinzel',serif;font-size:.72rem;color:var(--gold-dark)}
+.hist-date{font-size:.68rem;color:var(--stone)}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:flex-end;justify-content:center;z-index:100;backdrop-filter:blur(3px);animation:fadeIn .2s}
+.modal-sheet{background:var(--panel);border:1px solid var(--border);border-top-left-radius:16px;border-top-right-radius:16px;padding:1.5rem 1.3rem 2rem;width:100%;max-width:430px;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 1.2rem}
+.modal-title{font-family:'Cinzel',serif;font-size:1rem;color:var(--gold);margin-bottom:.4rem;font-weight:700}
+.modal-body{font-size:.9rem;color:var(--stone-light);line-height:1.6;margin-bottom:1.2rem;font-style:italic}
+.modal-actions{display:flex;gap:.6rem}
+
+/* ── TOAST ── */
+.toast{position:fixed;top:1rem;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--panel2);border:1px solid var(--gold-dim);border-radius:8px;padding:.7rem 1.1rem;display:flex;align-items:center;gap:.6rem;font-family:'Cinzel',serif;font-size:.8rem;color:var(--gold);z-index:200;transition:transform .3s cubic-bezier(.34,1.56,.64,1);max-width:300px;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── ANIMATIONS ── */
+.xp-float{position:fixed;font-family:'Cinzel',serif;font-size:1.1rem;color:var(--gold);font-weight:700;pointer-events:none;z-index:150;animation:floatUp 1.2s ease forwards}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-60px)}}
+</style>
+</head>
+<body>
+<div id="app" role="main" aria-label="Chronicler History Learning App">
+<h2 class="sr-only">Chronicler — Learn History Through Interactive Stories</h2>
+
+<!-- ══════════════ SCREEN: HOME ══════════════ -->
+<div id="screen-home" class="screen active">
+  <div class="stars" id="stars-bg"></div>
+  <div class="home-inner">
+    <svg class="crest-svg" viewBox="0 0 90 90" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <polygon points="45,5 60,20 75,20 75,65 45,85 15,65 15,20 30,20" fill="#1C1812" stroke="#C9A84C" stroke-width="1.5"/>
+      <polygon points="45,15 57,27 69,27 69,60 45,76 21,60 21,27 33,27" fill="none" stroke="#8B6914" stroke-width="0.8"/>
+      <text x="45" y="52" text-anchor="middle" font-family="serif" font-size="22" fill="#C9A84C" font-weight="bold">C</text>
+      <line x1="28" y1="35" x2="62" y2="35" stroke="#8B6914" stroke-width="0.8"/>
+      <circle cx="45" cy="27" r="3" fill="#C9A84C"/>
+      <circle cx="28" cy="35" r="2" fill="#8B6914"/>
+      <circle cx="62" cy="35" r="2" fill="#8B6914"/>
+    </svg>
+    <div class="home-title">CHRONICLER</div>
+    <div class="home-subtitle">History told as legend</div>
+    <div class="home-divider"></div>
+    <div class="player-strip">
+      <div class="avatar-ring">A</div>
+      <div class="strip-info">
+        <div class="strip-name">Aether the Scholar</div>
+        <div class="strip-meta">Level 4 · Historian</div>
+      </div>
+      <div class="strip-xp">1,240 XP</div>
+    </div>
+    <div class="home-actions">
+      <button class="btn btn-gold" onclick="showScreen('learn')">Continue Journey</button>
+      <button class="btn btn-outline" onclick="showScreen('daily')">⚔ Daily Challenge</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SCREEN: LEARN ══════════════ -->
+<div id="screen-learn" class="screen">
+  <div class="learn-hero">
+    <div class="learn-hero-row">
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.12em;color:var(--stone-light);text-transform:uppercase;margin-bottom:.2rem">Your Progress</div>
+        <div style="font-family:'Cinzel',serif;font-size:1rem;color:var(--parchment)">Aether the Scholar</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:.7rem">
+        <div class="streak-chip">🔥 7 days</div>
+        <div class="level-chip">
+          <div class="level-num">4</div>
+          <div class="level-label">Level</div>
+        </div>
+      </div>
+    </div>
+    <div class="xp-section">
+      <div class="xp-label-row">
+        <span class="xp-text">1,240 / 1,500 XP</span>
+        <span class="xp-text" style="color:var(--gold-dark)">83%</span>
+      </div>
+      <div class="xp-bar-wrap"><div class="xp-bar-fill" style="width:83%"></div></div>
+    </div>
+  </div>
+  <div class="daily-challenge-banner" onclick="showScreen('daily')">
+    <div class="dc-icon">⚔️</div>
+    <div class="dc-body">
+      <div class="dc-title">Daily Challenge Active</div>
+      <div class="dc-sub">The Fall of Constantinople · Ends in 14h 22m</div>
+    </div>
+    <div class="dc-arrow">›</div>
+  </div>
+  <div class="scroll-area" style="padding-bottom:.5rem">
+    <div class="era-section">
+      <div class="era-head">Ancient World</div>
+      <div class="lesson-card era-ancient done" onclick="openLesson(0)">
+        <div class="lc-icon">🏛️</div>
+        <div class="lc-body">
+          <div class="lc-title">The Rise of Rome</div>
+          <div class="lc-sub">From seven hills to a mighty republic</div>
+          <div class="lc-meta">
+            <span class="lc-time">⏱ 4 min</span>
+            <span class="lc-xp">+80 XP</span>
+            <span class="lc-done">✓</span>
+          </div>
+        </div>
+      </div>
+      <div class="lesson-card era-ancient done" onclick="openLesson(0)">
+        <div class="lc-icon">🐪</div>
+        <div class="lc-body">
+          <div class="lc-title">Alexander's March East</div>
+          <div class="lc-sub">The world's greatest military campaign</div>
+          <div class="lc-meta">
+            <span class="lc-time">⏱ 5 min</span>
+            <span class="lc-xp">+100 XP</span>
+            <span class="lc-done">✓</span>
+          </div>
+        </div>
+      </div>
+      <div class="lesson-card era-ancient" onclick="openLesson(0)">
+        <div class="lc-icon">🔱</div>
+        <div class="lc-body">
+          <div class="lc-title">The Persian Wars</div>
+          <div class="lc-sub">Greece stands against empire at Thermopylae</div>
+          <div class="lc-meta">
+            <span class="lc-time">⏱ 4 min</span>
+            <span class="lc-xp">+85 XP</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="era-section">
+      <div class="era-head">Medieval Era</div>
+      <div class="lesson-card era-medieval done" onclick="openLesson(1)">
+        <div class="lc-icon">⚔️</div>
+        <div class="lc-body">
+          <div class="lc-title">The First Crusade</div>
+          <div class="lc-sub">Holy war reshapes the ancient world</div>
+          <div class="lc-meta">
+            <span class="lc-time">⏱ 5 min</span>
+            <span class="lc-xp">+110 XP</span>
+            <span class="lc-done">✓</span>
+          </div>
+        </div>
+      </div>
+      <div class="lesson-card era-medieval" onclick="openLesson(1)">
+        <div class="lc-icon">🏰</div>
+        <div class="lc-body">
+          <div class="lc-title">Magna Carta & The Barons</div>
+          <div class="lc-sub">The document that changed the world</div>
+          <div class="lc-meta">
+            <span class="lc-time">⏱ 3 min</span>
+            <span class="lc-xp">+75 XP</span>
+          </div>
+        </div>
+      </div>
+      <div class="lesson-card era-medieval locked">
+        <div class="lc-icon">🦠</div>
+        <div class="lc-body">
+          <div class="lc-title">The Black Death</div>
+          <div class="lc-sub">A plague that rewrote civilization</div>
+          <div class="lc-meta">
+            <span class="lc-time">⏱ 4 min</span>
+            <span class="lc-xp">+90 XP</span>
+            <span class="lc-lock">🔒</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="era-section">
+      <div class="era-head">Renaissance</div>
+      <div class="lesson-card era-renaissance" onclick="openLesson(2)">
+        <div class="lc-icon">🎨</div>
+        <div class="lc-body">
+          <div class="lc-title">Florence & The Medici</div>
+          <div class="lc-sub">Art, power, and the birth of the modern mind</div>
+          <div class="lc-meta">
+            <span class="lc-time">⏱ 5 min</span>
+            <span class="lc-xp">+95 XP</span>
+          </div>
+        </div>
+      </div>
+      <div class="lesson-card era-renaissance locked">
+        <div class="lc-icon">🔭</div>
+        <div class="lc-body">
+          <div class="lc-title">Galileo's Trial</div>
+          <div class="lc-sub">Science vs. faith in the age of wonder</div>
+          <div class="lc-meta">
+            <span class="lc-time">⏱ 4 min</span>
+            <span class="lc-xp">+85 XP</span>
+            <span class="lc-lock">🔒</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="era-section">
+      <div class="era-head">Modern Age</div>
+      <div class="lesson-card era-modern locked">
+        <div class="lc-icon">🚂</div>
+        <div class="lc-body">
+          <div class="lc-title">The Industrial Revolution</div>
+          <div class="lc-sub">Steam power transforms humanity forever</div>
+          <div class="lc-meta">
+            <span class="lc-time">⏱ 5 min</span>
+            <span class="lc-xp">+120 XP</span>
+            <span class="lc-lock">🔒</span>
+          </div>
+        </div>
+      </div>
+      <div class="lesson-card era-modern locked">
+        <div class="lc-icon">🌐</div>
+        <div class="lc-body">
+          <div class="lc-title">World War I: The War to End Wars</div>
+          <div class="lc-sub">How one assassination lit the world on fire</div>
+          <div class="lc-meta">
+            <span class="lc-time">⏱ 6 min</span>
+            <span class="lc-xp">+150 XP</span>
+            <span class="lc-lock">🔒</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="height:1rem"></div>
+  </div>
+  <nav class="nav-bar" aria-label="Main navigation">
+    <button class="nav-item" onclick="showScreen('home')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
+    <button class="nav-item active"><span class="nav-icon">📜</span><span class="nav-label">Learn</span></button>
+    <button class="nav-item" onclick="showScreen('tree')"><span class="nav-icon">🌳</span><span class="nav-label">Skill Tree</span></button>
+    <button class="nav-item" onclick="showScreen('daily')"><span class="nav-icon">⚔️</span><span class="nav-label">Challenge</span></button>
+    <button class="nav-item" onclick="showScreen('profile')"><span class="nav-icon">👤</span><span class="nav-label">Profile</span></button>
+  </nav>
+</div>
+
+<!-- ══════════════ SCREEN: LESSON ══════════════ -->
+<div id="screen-lesson" class="screen">
+  <div class="lesson-top-bar">
+    <button class="btn btn-ghost" onclick="showScreen('learn')" style="padding:.3rem .5rem;font-size:1rem">✕</button>
+    <div class="progress-dots" id="lesson-dots"></div>
+    <div style="font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold-dark)" id="lesson-xp-counter">+0 XP</div>
+  </div>
+  <div class="lesson-content scroll-area" id="lesson-content"></div>
+  <div class="lesson-footer">
+    <div class="xp-earned" id="lesson-xp-footer">
+      <span>⭐</span><span id="lesson-xp-val">0 XP earned</span>
+    </div>
+    <button class="continue-btn" id="lesson-continue-btn" onclick="lessonNext()">Continue →</button>
+  </div>
+</div>
+
+<!-- ══════════════ SCREEN: QUIZ ══════════════ -->
+<div id="screen-quiz" class="screen">
+  <div class="quiz-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
+      <div class="page-title">Knowledge Check</div>
+      <div class="badge badge-gold" id="quiz-score-badge">0/0</div>
+    </div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quiz-progress" style="width:0%"></div></div>
+  </div>
+  <div class="quiz-body scroll-area" id="quiz-body">
+    <div class="quiz-q-num" id="quiz-q-num">Question 1 of 3</div>
+    <div class="quiz-question" id="quiz-question"></div>
+    <div class="quiz-options" id="quiz-options"></div>
+    <div class="quiz-feedback" id="quiz-feedback"></div>
+  </div>
+  <div class="quiz-footer">
+    <button class="btn btn-outline" style="flex:1" onclick="skipQuizQ()">Skip</button>
+    <button class="btn btn-gold" style="flex:2" id="quiz-next-btn" onclick="quizNext()" disabled>Next Question →</button>
+  </div>
+</div>
+
+<!-- ══════════════ SCREEN: COMPLETE ══════════════ -->
+<div id="screen-complete" class="screen">
+  <div class="complete-inner">
+    <div class="trophy-ring" id="complete-trophy">🏆</div>
+    <div class="complete-title" id="complete-title">Lesson Complete!</div>
+    <div class="complete-sub" id="complete-sub">You mastered The Rise of Rome</div>
+    <div class="stats-grid">
+      <div class="stat-card"><span class="stat-val" id="comp-xp">+85</span><span class="stat-label">XP Earned</span></div>
+      <div class="stat-card"><span class="stat-val" id="comp-score">100%</span><span class="stat-label">Quiz Score</span></div>
+      <div class="stat-card"><span class="stat-val">7🔥</span><span class="stat-label">Streak</span></div>
+    </div>
+    <div class="xp-gain-bar">
+      <div class="xp-gain-label"><span>Level 4</span><span style="color:var(--stone-light)">1,240 → 1,325 XP</span></div>
+      <div class="xp-bar-wrap"><div class="xp-bar-fill" id="comp-xp-bar" style="width:83%"></div></div>
+    </div>
+    <div class="complete-actions">
+      <button class="btn btn-gold" onclick="showScreen('learn')">Back to Lessons</button>
+      <button class="btn btn-outline" onclick="showScreen('daily')">Try Daily Challenge</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SCREEN: SKILL TREE ══════════════ -->
+<div id="screen-tree" class="screen">
+  <div class="tree-header">
+    <div class="page-title">Skill Tree</div>
+    <div style="font-size:.8rem;color:var(--stone-light);margin-top:.2rem">Unlock eras and civilizations</div>
+    <div class="tree-tabs">
+      <button class="tree-tab active" onclick="filterTree('all',this)">All Eras</button>
+      <button class="tree-tab" onclick="filterTree('ancient',this)">Ancient</button>
+      <button class="tree-tab" onclick="filterTree('medieval',this)">Medieval</button>
+      <button class="tree-tab" onclick="filterTree('renaissance',this)">Renaissance</button>
+      <button class="tree-tab" onclick="filterTree('modern',this)">Modern</button>
+    </div>
+  </div>
+  <div class="tree-scroll scroll-area" id="tree-content"></div>
+  <nav class="nav-bar">
+    <button class="nav-item" onclick="showScreen('home')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
+    <button class="nav-item" onclick="showScreen('learn')"><span class="nav-icon">📜</span><span class="nav-label">Learn</span></button>
+    <button class="nav-item active"><span class="nav-icon">🌳</span><span class="nav-label">Skill Tree</span></button>
+    <button class="nav-item" onclick="showScreen('daily')"><span class="nav-icon">⚔️</span><span class="nav-label">Challenge</span></button>
+    <button class="nav-item" onclick="showScreen('profile')"><span class="nav-icon">👤</span><span class="nav-label">Profile</span></button>
+  </nav>
+</div>
+
+<!-- ══════════════ SCREEN: DAILY CHALLENGE ══════════════ -->
+<div id="screen-daily" class="screen">
+  <div class="daily-hero">
+    <div style="font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.15em;color:rgba(255,184,184,.5);text-transform:uppercase;margin-bottom:.3rem">Today's Gauntlet</div>
+    <div class="daily-hero-title">⚔️ The Siege of Constantinople</div>
+    <div class="daily-hero-sub">Answer 5 questions before time runs out. No second chances.</div>
+    <div class="timer-strip">
+      <div>
+        <div class="timer-label">Time Remaining</div>
+        <div class="timer-val" id="daily-timer">14:22:08</div>
+      </div>
+      <div style="flex:1;margin-left:.8rem">
+        <div style="height:4px;background:rgba(139,26,26,.3);border-radius:2px;overflow:hidden">
+          <div style="height:100%;background:var(--crimson-light);border-radius:2px;width:40%"></div>
+        </div>
+        <div style="font-size:.65rem;color:rgba(255,184,184,.4);margin-top:.3rem">Resets in 14h</div>
+      </div>
+    </div>
+  </div>
+  <div class="daily-scroll scroll-area">
+    <div style="padding:.2rem 0 .6rem">
+      <div class="challenge-card active-challenge" onclick="startDailyChallenge()">
+        <div class="cc-icon">🗡️</div>
+        <div class="cc-body">
+          <div class="cc-title">Speed Round · 5 Questions</div>
+          <div class="cc-sub">Byzantine Empire at its fall — test your memory under pressure. 30 seconds per question.</div>
+          <div class="cc-rewards">
+            <span class="badge badge-gold">+200 XP</span>
+            <span class="badge badge-red">Timed ⏱</span>
+          </div>
+        </div>
+      </div>
+      <div class="challenge-card" onclick="showToast('🔒 Complete the Speed Round first!')">
+        <div class="cc-icon">📜</div>
+        <div class="cc-body">
+          <div class="cc-title">Scholar's Deep Dive</div>
+          <div class="cc-sub">10-question essay challenge on the Ottoman expansion. Bonus XP for accuracy.</div>
+          <div class="cc-rewards">
+            <span class="badge badge-gold">+350 XP</span>
+            <span class="badge badge-blue">Unlock after Speed</span>
+          </div>
+        </div>
+      </div>
+      <div class="challenge-card" onclick="showToast('🔒 Complete the Speed Round first!')">
+        <div class="cc-icon">🏅</div>
+        <div class="cc-body">
+          <div class="cc-title">Streak Saver Bonus</div>
+          <div class="cc-sub">Keep your 7-day streak alive. Answer just 1 question correctly.</div>
+          <div class="cc-rewards">
+            <span class="badge badge-gold">+50 XP</span>
+            <span class="badge badge-green">Streak ✓</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="leaderboard-section">
+      <div class="lb-title">Today's Leaderboard</div>
+      <div id="leaderboard-rows"></div>
+    </div>
+    <div style="height:1rem"></div>
+  </div>
+  <nav class="nav-bar">
+    <button class="nav-item" onclick="showScreen('home')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
+    <button class="nav-item" onclick="showScreen('learn')"><span class="nav-icon">📜</span><span class="nav-label">Learn</span></button>
+    <button class="nav-item" onclick="showScreen('tree')"><span class="nav-icon">🌳</span><span class="nav-label">Skill Tree</span></button>
+    <button class="nav-item active"><span class="nav-icon">⚔️</span><span class="nav-label">Challenge</span></button>
+    <button class="nav-item" onclick="showScreen('profile')"><span class="nav-icon">👤</span><span class="nav-label">Profile</span></button>
+  </nav>
+</div>
+
+<!-- ══════════════ SCREEN: PROFILE ══════════════ -->
+<div id="screen-profile" class="screen">
+  <div class="profile-hero">
+    <div class="profile-avatar">A</div>
+    <div class="profile-name">Aether the Scholar</div>
+    <div class="profile-title">"Seeker of Lost Ages"</div>
+    <div class="profile-level">⭐ Level 4 Historian</div>
+  </div>
+  <div class="profile-scroll scroll-area">
+    <div class="profile-stats">
+      <div class="ps-card"><span class="ps-val" id="ps-xp">1,240</span><span class="ps-label">Total XP</span></div>
+      <div class="ps-card"><span class="ps-val">7🔥</span><span class="ps-label">Streak</span></div>
+      <div class="ps-card"><span class="ps-val" id="ps-done">5</span><span class="ps-label">Lessons Done</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-bottom:1.2rem">
+      <div class="ps-card"><span class="ps-val">87%</span><span class="ps-label">Accuracy</span></div>
+      <div class="ps-card"><span class="ps-val">3</span><span class="ps-label">Top 10 Finishes</span></div>
+      <div class="ps-card"><span class="ps-val">4</span><span class="ps-label">Eras Explored</span></div>
+    </div>
+    <div class="achievement-section">
+      <div class="section-head">Achievements</div>
+      <div class="achievements-grid">
+        <div class="ach-card earned">
+          <div class="ach-icon">📜</div>
+          <div>
+            <div class="ach-name">First Scroll</div>
+            <div class="ach-desc">Complete your first lesson</div>
+          </div>
+        </div>
+        <div class="ach-card earned">
+          <div class="ach-icon">🔥</div>
+          <div>
+            <div class="ach-name">Flame Keeper</div>
+            <div class="ach-desc">7-day streak achieved</div>
+          </div>
+        </div>
+        <div class="ach-card earned">
+          <div class="ach-icon">⚔️</div>
+          <div>
+            <div class="ach-name">First Blood</div>
+            <div class="ach-desc">Complete a Daily Challenge</div>
+          </div>
+        </div>
+        <div class="ach-card earned">
+          <div class="ach-icon">🏛️</div>
+          <div>
+            <div class="ach-name">Ancient Eyes</div>
+            <div class="ach-desc">Finish all Ancient World lessons</div>
+          </div>
+        </div>
+        <div class="ach-card locked">
+          <div class="ach-icon">👑</div>
+          <div>
+            <div class="ach-name">King Maker</div>
+            <div class="ach-desc">Reach Level 10</div>
+          </div>
+        </div>
+        <div class="ach-card locked">
+          <div class="ach-icon">🌍</div>
+          <div>
+            <div class="ach-name">Polymath</div>
+            <div class="ach-desc">Complete all 4 eras</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="achievement-section">
+      <div class="section-head">Recent History</div>
+      <div class="history-list">
+        <div class="hist-item">
+          <div class="hist-dot" style="background:var(--gold)"></div>
+          <div class="hist-title">The First Crusade</div>
+          <div class="hist-xp">+110 XP</div>
+          <div class="hist-date">Today</div>
+        </div>
+        <div class="hist-item">
+          <div class="hist-dot" style="background:var(--gold)"></div>
+          <div class="hist-title">Alexander's March East</div>
+          <div class="hist-xp">+100 XP</div>
+          <div class="hist-date">Yesterday</div>
+        </div>
+        <div class="hist-item">
+          <div class="hist-dot" style="background:var(--forest-light)"></div>
+          <div class="hist-title">Daily Challenge — Perfect Score</div>
+          <div class="hist-xp">+200 XP</div>
+          <div class="hist-date">2 days ago</div>
+        </div>
+        <div class="hist-item">
+          <div class="hist-dot" style="background:var(--gold)"></div>
+          <div class="hist-title">The Rise of Rome</div>
+          <div class="hist-xp">+80 XP</div>
+          <div class="hist-date">3 days ago</div>
+        </div>
+      </div>
+    </div>
+    <div style="height:1rem"></div>
+  </div>
+  <nav class="nav-bar">
+    <button class="nav-item" onclick="showScreen('home')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
+    <button class="nav-item" onclick="showScreen('learn')"><span class="nav-icon">📜</span><span class="nav-label">Learn</span></button>
+    <button class="nav-item" onclick="showScreen('tree')"><span class="nav-icon">🌳</span><span class="nav-label">Skill Tree</span></button>
+    <button class="nav-item" onclick="showScreen('daily')"><span class="nav-icon">⚔️</span><span class="nav-label">Challenge</span></button>
+    <button class="nav-item active"><span class="nav-icon">👤</span><span class="nav-label">Profile</span></button>
+  </nav>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal-overlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Node Info</div>
+    <div class="modal-body" id="modal-body">Details here</div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal()">Close</button>
+      <button class="btn btn-gold" style="flex:1.5" id="modal-action-btn">Start Learning</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast" role="alert" aria-live="polite">
+  <span id="toast-icon">⭐</span>
+  <span id="toast-msg">Achievement unlocked!</span>
+</div>
+
+<script>
+// ══════════════ DATA ══════════════
+const LESSONS = [
+  {
+    id: 0, title: "The Persian Wars", era: "Ancient", icon: "🔱", xpReward: 85,
+    scenes: [
+      {
+        label: "Prologue", title: "An Empire Awakens",
+        visual: "🏛️", visualBg: "#1A1400",
+        body: `<p>The year is <strong>490 BCE</strong>. The Persian Empire, the largest the world has ever seen, stretches from Egypt to the edge of India. Its new king, <strong>Darius the Great</strong>, turns his gaze westward — toward the small, squabbling city-states of Greece.</p><p>To Darius, these Greeks are <em>nothing</em>. A collection of fishing villages and marble columns. He sends messengers demanding earth and water — symbols of submission. One by one, cities kneel.</p><p>But two cities refuse: <strong>Athens and Sparta</strong>.</p>`,
+        hasChoice: false
+      },
+      {
+        label: "Scene I", title: "The Battle of Marathon",
+        visual: "⚔️", visualBg: "#180A0A",
+        body: `<p>Darius launches his first invasion. A fleet of 600 ships carries 25,000 Persian soldiers to the plain of <strong>Marathon</strong>, just 26 miles from Athens.</p><p>The Athenians are outnumbered nearly two to one. Their general, <strong>Miltiades</strong>, proposes a desperate plan: charge at full speed, thin the Persian center, and crush their flanks.</p><p>The Persian commanders expect the Greeks to simply wait behind their shields.</p>`,
+        hasChoice: true,
+        choiceLabel: "You are Miltiades. What do you order?",
+        choices: [
+          { label: "Charge at full sprint across the plain", outcome: "Your gamble works perfectly. The Persians, stunned by the Greeks' speed, cannot draw their bows in time. The flanks collapse inward, trapping thousands. Athenian losses: 192 dead. Persian losses: over 6,400.", good: true },
+          { label: "Hold position and wait for Spartan reinforcements", outcome: "A cautious choice — but fatal. The Persians outflank your divided forces. Without the element of surprise and momentum, the superior Persian numbers overwhelm the Greek lines before Sparta arrives." }
+        ]
+      },
+      {
+        label: "Scene II", title: "The Hot Gates — Thermopylae",
+        visual: "🛡️", visualBg: "#0A0A18",
+        body: `<p>Ten years later, Darius's son <strong>Xerxes</strong> returns with vengeance. His army is so vast, ancient accounts claim it drank entire rivers dry. Modern estimates: <strong>180,000 soldiers</strong>.</p><p>Greece faces annihilation. Then a Spartan king named <strong>Leonidas</strong> proposes something insane: hold the narrow mountain pass of <strong>Thermopylae</strong> with just 300 Spartans — and 7,000 Greek allies — long enough for the fleet to fight at sea.</p><p>For two days, 300 men hold back an empire. Then a Greek traitor reveals a mountain path around the pass.</p>`,
+        hasChoice: true,
+        choiceLabel: "Leonidas knows his flank is exposed. He chooses:",
+        choices: [
+          { label: "Dismiss most Greeks and fight to the last with 300 Spartans", outcome: "Leonidas sends the allied Greeks home to fight another day. His 300 Spartans turn to face the encircling Persians. They die to a man — but their sacrifice buys Greece the time it needs. The legend of the 300 is born.", good: true },
+          { label: "Order a full retreat to regroup at Athens", outcome: "A strategically sound choice — but history would have been different. Without Leonidas's last stand, Persia might have shattered Greek morale. The fleet would have had no time to maneuver at Salamis." }
+        ]
+      },
+      {
+        label: "Finale", title: "The Sea Battle of Salamis",
+        visual: "🌊", visualBg: "#0A1018",
+        body: `<p>The Persian fleet pours into the narrow strait of <strong>Salamis</strong>. The Athenian commander <strong>Themistocles</strong> has baited them here deliberately — in tight waters, the Persians' numerical advantage means nothing.</p><p>The heavier Greek triremes ram and sink Persian ships one by one. Xerxes watches from a golden throne on the hillside as his invincible navy collapses. He retreats north, never to return.</p><p>Greece survives. Western civilization, as we know it, is preserved. And two thousand years later, athletes still run <em>26 miles</em> to commemorate a messenger's run from Marathon.</p>`,
+        hasChoice: false
+      }
+    ]
+  },
+  {
+    id: 1, title: "Magna Carta & The Barons", era: "Medieval", icon: "🏰", xpReward: 75,
+    scenes: [
+      {
+        label: "Prologue", title: "A King Without Honor",
+        visual: "👑", visualBg: "#18100A",
+        body: `<p>England, <strong>1215</strong>. King John sits on the throne — and no English monarch before or since has been so universally despised. He's lost most of France, emptied the treasury, and taxed his barons to the breaking point.</p><p>He once hung <strong>28 Welsh hostages</strong> to make a point. He imprisoned his own wife. Pope Innocent III excommunicated him from the Church.</p><p>Even his mother reportedly said he was born of the devil and would return to the devil.</p>`,
+        hasChoice: false
+      },
+      {
+        label: "Scene I", title: "The Barons Rise",
+        visual: "⚔️", visualBg: "#18100A",
+        body: `<p>By spring 1215, the English barons have had enough. They raise an army and march on London. The city — furious at John — opens its gates without a fight.</p><p>Trapped, John has no choice but to negotiate. The barons arrive at <strong>Runnymede</strong>, a meadow by the Thames, with a document they call the <em>"Great Charter"</em> — <strong>Magna Carta</strong>.</p>`,
+        hasChoice: true,
+        choiceLabel: "You are King John. Your barons demand you sign. What do you do?",
+        choices: [
+          { label: "Sign the charter, then secretly ask the Pope to annul it", outcome: "John's move. He signs with his fingers crossed — and immediately sends a letter to Pope Innocent III. The Pope agrees, calling Magna Carta 'shameful, demeaning, illegal and unjust.' Civil war erupts. But John dies of dysentery months later, and his advisors quietly keep the charter alive.", good: false },
+          { label: "Refuse to sign and fight to the last", outcome: "Without Magna Carta, the principle that rulers must answer to law might have died in England. The barons would have installed a French prince. English common law — and eventually American democracy — would look very different." }
+        ]
+      },
+      {
+        label: "Finale", title: "The Charter That Lived",
+        visual: "📜", visualBg: "#141008",
+        body: `<p>Magna Carta was annulled within weeks, and a civil war began. John died of dysentery in October 1215 — possibly from stress-eating too many peaches.</p><p>But here's the remarkable thing: his nine-year-old son <strong>Henry III</strong> reissued the charter to win support. Then reissued it again. And again. By 1297 it became <strong>permanent statute law</strong>.</p><p>The great idea in Magna Carta — that <em>no one is above the law, not even a king</em> — became the foundation of English common law, the American Bill of Rights, and eventually the United Nations Declaration of Human Rights.</p><p>One soggy meadow. One reluctant signature. Eight hundred years of freedom.</p>`,
+        hasChoice: false
+      }
+    ]
+  },
+  {
+    id: 2, title: "Florence & The Medici", era: "Renaissance", icon: "🎨", xpReward: 95,
+    scenes: [
+      {
+        label: "Prologue", title: "The Family That Bought the Renaissance",
+        visual: "🎨", visualBg: "#0A1208",
+        body: `<p>Florence, <strong>1434</strong>. A city of 50,000 people, more banks than churches, and a single family that controls both: <strong>the Medici</strong>.</p><p>Cosimo de' Medici returns from exile to take control of Florence. He's not technically its ruler — Florence is a republic. But when you control the money supply of half of Europe, titles are optional.</p><p>Cosimo begins spending his astronomical fortune on something unusual for a banker: <em>art</em>.</p>`,
+        hasChoice: false
+      },
+      {
+        label: "Scene I", title: "The Patron's Bargain",
+        visual: "🖼️", visualBg: "#0A100A",
+        body: `<p>The Medici model of patronage was simple: <strong>pay artists to make beautiful things, and use that beauty as power</strong>. A painting of your family in heaven was better propaganda than a thousand pamphlets.</p><p>Cosimo commissions <strong>Brunelleschi</strong> to dome the Florence Cathedral — a structure so ambitious, no one knows how to build it. He hires <strong>Donatello</strong> to sculpt figures that breathe. He fills palaces with books the Church wants burned.</p>`,
+        hasChoice: true,
+        choiceLabel: "Lorenzo de' Medici must choose his next commission:",
+        choices: [
+          { label: "Fund a young sculptor named Michelangelo from the slums", outcome: "Lorenzo spots a 15-year-old boy copying classical sculpture in his garden. He brings Michelangelo into his household, feeds him, educates him among philosophers. Without the Medici, the Sistine Chapel ceiling might never exist.", good: true },
+          { label: "Commission military fortifications instead of art", outcome: "A practical choice — but it misses the point of Medici power. The family's genius was understanding that culture IS power. Military walls crumble; Botticelli's Venus endures forever." }
+        ]
+      },
+      {
+        label: "Finale", title: "The World They Made",
+        visual: "🌅", visualBg: "#100A00",
+        body: `<p>The Medici family lasted 300 years and produced <strong>four popes, two queens of France</strong>, and funded artists including Botticelli, da Vinci, and Michelangelo.</p><p>Their greatest invention wasn't banking — it was the idea that <em>investing in human creativity</em> could transform civilization. The Renaissance didn't just happen; it was <strong>purchased</strong>.</p><p>When you look at Botticelli's Birth of Venus, you're looking at what happens when an enormously wealthy family decides to bet everything on beauty over weapons. Florence became the most influential city in the Western world — not because of its armies, but because of its artists.</p>`,
+        hasChoice: false
+      }
+    ]
+  }
+];
+
+const QUIZ_QUESTIONS = [
+  [
+    { q: "Which battle first repelled the Persian invasion of Greece?", opts: ["Thermopylae","Marathon","Salamis","Plataea"], ans: 1, exp: "The Battle of Marathon in 490 BCE was the first major Greek victory over Persia. General Miltiades' bold charging tactic caught the Persians off guard." },
+    { q: "Why did Leonidas send most of the Greek allies away at Thermopylae?", opts: ["They were cowards","They ran out of food","To save them for future battles when the pass was doomed","Sparta needed them elsewhere"], ans: 2, exp: "When a traitor revealed the mountain path, Leonidas knew the pass was lost. He dismissed the allies to preserve Greek fighting strength." },
+    { q: "What made the Strait of Salamis strategically ideal for Greece?", opts: ["It was shallower for Greek ships","Narrow waters neutralized Persian numerical superiority","The winds favored Greek sails","Persia's ships couldn't enter"], ans: 1, exp: "In narrow waters, the Persians couldn't bring their full fleet to bear at once. The heavier, more maneuverable Greek triremes thrived in these conditions." }
+  ],
+  [
+    { q: "Why did the English barons specifically go to Runnymede to negotiate?", opts: ["It was neutral ground by the Thames","London refused to host","It was Magna Carta tradition","It was closest to John's castle"], ans: 0, exp: "Runnymede was a meadow on the banks of the Thames — neutral ground between London (controlled by the barons) and Windsor Castle (John's stronghold)." },
+    { q: "What was John's immediate response after signing Magna Carta?", opts: ["He honored every clause","He fled to France","He secretly asked the Pope to annul it","He raised a new army"], ans: 2, exp: "John immediately sent messengers to Pope Innocent III, who agreed the charter was 'shameful and demeaning' and annulled it — triggering the First Barons' War." },
+    { q: "How did Magna Carta survive being annulled by the Pope?", opts: ["The barons hid copies","Henry III reissued it to gain support","It was never truly annulled","The Pope reversed course"], ans: 1, exp: "When John died, his young son Henry III's regents reissued Magna Carta to win baron support. This pattern continued until it became permanent statute law in 1297." }
+  ],
+  [
+    { q: "How did Cosimo de' Medici actually control Florence without holding the title of ruler?", opts: ["Through military force","He was elected legitimately","Through control of banking and money supply","By marrying into the ruling family"], ans: 2, exp: "The Medici controlled the finances of half of Europe. As the city's primary banker, Cosimo's economic leverage made him the de facto ruler without needing a formal title." },
+    { q: "Who was the young sculptor Lorenzo de' Medici noticed in his garden?", opts: ["Leonardo da Vinci","Donatello","Raphael","Michelangelo"], ans: 3, exp: "Lorenzo spotted a 15-year-old Michelangelo copying classical sculpture and took him into the Medici household, providing education and exposure to the greatest minds of the age." },
+    { q: "What was the Medici family's core insight about power?", opts: ["Military strength is supreme","Cultural investment is a form of power","Banking surpasses all other influences","Religion controls the people"], ans: 1, exp: "The Medici understood that beauty and culture create soft power. Funding art earned them prestige, loyalty, papal connections, and lasting influence that outlasted any army." }
+  ]
+];
+
+const SKILL_TREE = [
+  { era: "ancient", color: "ancient", nodes: [
+    { icon:"🏛️", name:"Roman Republic", status:"mastered", prog:100 },
+    { icon:"🐪", name:"Alexander's Empire", status:"mastered", prog:100 },
+    { icon:"🔱", name:"Persian Wars", status:"unlocked", prog:60 },
+    { icon:"⚱️", name:"Egyptian Pharaohs", status:"unlocked", prog:20 },
+    { icon:"🦁", name:"Carthage & Hannibal", status:"locked", prog:0 },
+    { icon:"📐", name:"Greek Philosophy", status:"locked", prog:0 }
+  ]},
+  { era: "medieval", color: "medieval", nodes: [
+    { icon:"⚔️", name:"The Crusades", status:"mastered", prog:100 },
+    { icon:"🏰", name:"Magna Carta", status:"unlocked", prog:40 },
+    { icon:"🦠", name:"Black Death", status:"locked", prog:0 },
+    { icon:"🏇", name:"Mongol Empire", status:"locked", prog:0 },
+    { icon:"⛵", name:"Viking Age", status:"locked", prog:0 },
+    { icon:"🕌", name:"Islamic Golden Age", status:"locked", prog:0 }
+  ]},
+  { era: "renaissance", color: "renaissance", nodes: [
+    { icon:"🎨", name:"Medici & Florence", status:"unlocked", prog:30 },
+    { icon:"🔭", name:"Galileo's Trial", status:"locked", prog:0 },
+    { icon:"🗺️", name:"Age of Exploration", status:"locked", prog:0 },
+    { icon:"🖋️", name:"The Printing Press", status:"locked", prog:0 }
+  ]},
+  { era: "modern", color: "modern", nodes: [
+    { icon:"🚂", name:"Industrial Revolution", status:"locked", prog:0 },
+    { icon:"🗽", name:"American Revolution", status:"locked", prog:0 },
+    { icon:"⚡", name:"World War I", status:"locked", prog:0 },
+    { icon:"💣", name:"World War II", status:"locked", prog:0 },
+    { icon:"🚀", name:"Space Race", status:"locked", prog:0 },
+    { icon:"🌐", name:"Cold War", status:"locked", prog:0 }
+  ]}
+];
+
+const ERA_LABELS = { ancient:"Ancient World", medieval:"Medieval Era", renaissance:"Renaissance", modern:"Modern Age" };
+
+const LEADERBOARD = [
+  { name:"Magnus V.", score:980, streak:14, init:"MV", you:false },
+  { name:"Priya S.", score:870, streak:21, init:"PS", you:false },
+  { name:"You (Aether)", score:740, streak:7, init:"A", you:true },
+  { name:"Tariq M.", score:690, streak:5, init:"TM", you:false },
+  { name:"Elena K.", score:620, streak:3, init:"EK", you:false },
+  { name:"Jae-won L.", score:580, streak:9, init:"JL", you:false },
+  { name:"Freya B.", score:450, streak:2, init:"FB", you:false }
+];
+
+const DAILY_QUESTIONS = [
+  { q:"What year did Constantinople fall to the Ottomans?", opts:["1389","1453","1492","1521"], ans:1, exp:"1453 CE — Sultan Mehmed II's forces breached the Theodosian Walls after a 53-day siege, ending the Byzantine Empire." },
+  { q:"Which Byzantine Emperor died defending the city in 1453?", opts:["Justinian II","Basil II","Constantine XI","John VIII"], ans:2, exp:"Constantine XI Palaiologos reportedly threw off his imperial regalia and died fighting on the walls rather than surrender or flee." },
+  { q:"What weapon gave the Ottomans a decisive advantage in the siege?", opts:["Greek fire","Massive cannon called the Basilica","Superior cavalry","Naval blockade alone"], ans:1, exp:"The Hungarian engineer Urban built the Basilica cannon for Mehmed II — a 27-foot bronze monster that hurled 600-pound stone balls at the ancient walls." },
+  { q:"How long had Constantinople been the capital of the Eastern Roman Empire?", opts:["about 200 years","about 500 years","about 800 years","over 1,000 years"], ans:3, exp:"Constantinople was founded by Constantine I in 330 CE and remained the Byzantine capital for 1,123 years until 1453." },
+  { q:"What was the immediate global consequence of Constantinople's fall?", opts:["The start of the Crusades","European powers unite against the Ottomans","Silk Road routes to Asia are disrupted, pushing Europeans to seek sea routes","The Pope calls for a new crusade successfully"], ans:2, exp:"Ottoman control of land trade routes accelerated European investment in sea exploration — directly leading to Columbus's 1492 voyage and the Age of Discovery." }
+];
+
+// ══════════════ STATE ══════════════
+let state = {
+  currentLesson: null,
+  lessonScene: 0,
+  lessonXP: 0,
+  choiceMade: false,
+  quizLesson: null,
+  quizQ: 0,
+  quizScore: 0,
+  quizAnswered: false,
+  dailyActive: false,
+  dailyQ: 0,
+  dailyScore: 0,
+  totalXP: 1240,
+  streak: 7,
+  lessonsCompleted: 5,
+  treeFilter: 'all'
+};
+
+// ══════════════ INIT ══════════════
+document.addEventListener('DOMContentLoaded', () => {
+  generateStars();
+  renderTree();
+  renderLeaderboard();
+  startTimer();
+});
+
+function generateStars() {
+  const c = document.getElementById('stars-bg');
+  if (!c) return;
+  const cnt = 60;
+  for (let i = 0; i < cnt; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() < 0.2 ? 3 : 2;
+    s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--del:${Math.random()*5}s;opacity:${.2+Math.random()*.6}`;
+    c.appendChild(s);
+  }
+}
+
+// ══════════════ SCREEN NAV ══════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-'+name);
+  if (el) el.classList.add('active');
+}
+
+// ══════════════ LESSON FLOW ══════════════
+function openLesson(idx) {
+  state.currentLesson = LESSONS[idx];
+  state.lessonScene = 0;
+  state.lessonXP = 0;
+  state.choiceMade = false;
+  renderLessonScene();
+  showScreen('lesson');
+}
+
+function renderLessonScene() {
+  const lesson = state.currentLesson;
+  const scene = lesson.scenes[state.lessonScene];
+  const total = lesson.scenes.length;
+  const isLast = state.lessonScene === total - 1;
+
+  // Dots
+  const dots = document.getElementById('lesson-dots');
+  dots.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'pdot' + (i < state.lessonScene ? ' done' : i === state.lessonScene ? ' active' : '');
+    dots.appendChild(d);
+  }
+
+  // XP counter
+  document.getElementById('lesson-xp-counter').textContent = '+' + state.lessonXP + ' XP';
+  document.getElementById('lesson-xp-val').textContent = state.lessonXP + ' XP earned';
+
+  // Continue btn
+  const btn = document.getElementById('lesson-continue-btn');
+  if (isLast && !scene.hasChoice) {
+    btn.textContent = 'Take Quiz →';
+    btn.style.background = 'linear-gradient(135deg,#2D6A2D,#3D9A3D)';
+  } else {
+    btn.textContent = 'Continue →';
+    btn.style.background = '';
+  }
+
+  // Content
+  const el = document.getElementById('lesson-content');
+  el.innerHTML = `
+    <div class="scene-label">${scene.label}</div>
+    <div class="scene-title">${scene.title}</div>
+    <div class="scene-visual" style="background:${scene.visualBg}">
+      <span style="font-size:3.5rem">${scene.visual}</span>
+    </div>
+    <div class="scene-body">${scene.body}</div>
+    ${scene.hasChoice ? renderChoices(scene) : ''}
+  `;
+  el.scrollTop = 0;
+  state.choiceMade = false;
+}
+
+function renderChoices(scene) {
+  return `
+    <div class="choice-section">
+      <div class="choice-label">${scene.choiceLabel}</div>
+      ${scene.choices.map((c,i) => `
+        <button class="choice-btn" onclick="makeChoice(${i})" id="choice-${i}">
+          <div class="choice-marker">${String.fromCharCode(65+i)}</div>
+          <span>${c.label}</span>
+        </button>
+      `).join('')}
+      <div id="choice-outcome" style="display:none" class="choice-outcome"></div>
+    </div>
+  `;
+}
+
+function makeChoice(idx) {
+  if (state.choiceMade) return;
+  state.choiceMade = true;
+  const scene = state.currentLesson.scenes[state.lessonScene];
+  const choice = scene.choices[idx];
+  const good = choice.good;
+  const xpGain = good ? 20 : 5;
+  state.lessonXP += xpGain;
+  document.getElementById('lesson-xp-counter').textContent = '+' + state.lessonXP + ' XP';
+  document.getElementById('lesson-xp-val').textContent = state.lessonXP + ' XP earned';
+
+  // Update buttons
+  scene.choices.forEach((_,i) => {
+    const btn = document.getElementById('choice-'+i);
+    if (!btn) return;
+    if (i === idx) {
+      btn.className = 'choice-btn ' + (good ? 'chosen-good' : 'chosen-bad');
+      btn.querySelector('.choice-marker').textContent = good ? '✓' : '✗';
+    } else {
+      btn.style.opacity = '.35';
+      btn.style.pointerEvents = 'none';
+    }
+  });
+
+  // Outcome
+  const out = document.getElementById('choice-outcome');
+  if (out) {
+    out.style.display = 'block';
+    out.style.borderLeftColor = good ? 'var(--forest-light)' : 'var(--crimson)';
+    out.textContent = choice.outcome;
+    showXPFloat(xpGain, good);
+  }
+}
+
+function lessonNext() {
+  const lesson = state.currentLesson;
+  const scene = lesson.scenes[state.lessonScene];
+  if (scene.hasChoice && !state.choiceMade) {
+    showToast('📖 Make your choice before continuing');
+    return;
+  }
+  if (state.lessonScene < lesson.scenes.length - 1) {
+    state.lessonScene++;
+    state.lessonXP += 15;
+    renderLessonScene();
+  } else {
+    startQuiz(lesson);
+  }
+}
+
+// ══════════════ QUIZ FLOW ══════════════
+function startQuiz(lesson) {
+  state.quizLesson = lesson;
+  state.quizQ = 0;
+  state.quizScore = 0;
+  state.quizAnswered = false;
+  renderQuizQ();
+  showScreen('quiz');
+}
+
+function renderQuizQ() {
+  const qs = QUIZ_QUESTIONS[state.quizLesson.id];
+  const q = qs[state.quizQ];
+  const total = qs.length;
+  document.getElementById('quiz-q-num').textContent = `Question ${state.quizQ+1} of ${total}`;
+  document.getElementById('quiz-question').textContent = q.q;
+  document.getElementById('quiz-score-badge').textContent = `${state.quizScore}/${state.quizQ}`;
+  document.getElementById('quiz-progress').style.width = `${(state.quizQ/total)*100}%`;
+  document.getElementById('quiz-feedback').className = 'quiz-feedback';
+  document.getElementById('quiz-feedback').textContent = '';
+  document.getElementById('quiz-next-btn').disabled = true;
+  state.quizAnswered = false;
+
+  const opts = document.getElementById('quiz-options');
+  opts.innerHTML = q.opts.map((o,i) => `
+    <button class="quiz-opt" onclick="answerQuiz(${i})" id="qopt-${i}">
+      <div class="quiz-letter">${String.fromCharCode(65+i)}</div>
+      <span>${o}</span>
+    </button>
+  `).join('');
+}
+
+function answerQuiz(idx) {
+  if (state.quizAnswered) return;
+  state.quizAnswered = true;
+  const qs = QUIZ_QUESTIONS[state.quizLesson.id];
+  const q = qs[state.quizQ];
+  const correct = idx === q.ans;
+  if (correct) state.quizScore++;
+
+  q.opts.forEach((_,i) => {
+    const el = document.getElementById('qopt-'+i);
+    if (!el) return;
+    if (i === q.ans) el.className = 'quiz-opt correct';
+    else if (i === idx && !correct) el.className = 'quiz-opt wrong';
+    else el.className = 'quiz-opt dimmed';
+  });
+
+  const fb = document.getElementById('quiz-feedback');
+  fb.innerHTML = `<strong style="color:${correct?'#7DD87D':'#E07070'}">${correct?'✓ Correct!':'✗ Not quite.'}</strong> ${q.exp}`;
+  fb.className = 'quiz-feedback show';
+  document.getElementById('quiz-next-btn').disabled = false;
+
+  if (correct) showXPFloat(25, true);
+  document.getElementById('quiz-score-badge').textContent = `${state.quizScore}/${state.quizQ+1}`;
+}
+
+function quizNext() {
+  const qs = QUIZ_QUESTIONS[state.quizLesson.id];
+  if (state.quizQ < qs.length - 1) {
+    state.quizQ++;
+    renderQuizQ();
+  } else {
+    finishLesson();
+  }
+}
+
+function skipQuizQ() {
+  const qs = QUIZ_QUESTIONS[state.quizLesson.id];
+  if (state.quizQ < qs.length - 1) {
+    state.quizQ++;
+    renderQuizQ();
+  } else {
+    finishLesson();
+  }
+}
+
+// ══════════════ COMPLETION ══════════════
+function finishLesson() {
+  const lesson = state.quizLesson;
+  const qs = QUIZ_QUESTIONS[lesson.id];
+  const totalXPEarned = state.lessonXP + (state.quizScore * 25);
+  const pct = Math.round((state.quizScore / qs.length) * 100);
+  state.totalXP += totalXPEarned;
+  state.lessonsCompleted++;
+
+  document.getElementById('complete-title').textContent = pct === 100 ? 'Perfect Scholar!' : pct >= 67 ? 'Lesson Complete!' : 'Lesson Complete';
+  document.getElementById('complete-sub').textContent = `You mastered "${lesson.title}"`;
+  document.getElementById('comp-xp').textContent = '+' + totalXPEarned;
+  document.getElementById('comp-score').textContent = pct + '%';
+  document.getElementById('complete-trophy').textContent = pct === 100 ? '🏆' : pct >= 67 ? '⭐' : '📜';
+
+  const xpFill = Math.min(100, ((state.totalXP % 500) / 500) * 100);
+  setTimeout(() => {
+    document.getElementById('comp-xp-bar').style.width = xpFill + '%';
+  }, 300);
+
+  document.getElementById('ps-xp').textContent = state.totalXP.toLocaleString();
+  document.getElementById('ps-done').textContent = state.lessonsCompleted;
+
+  showScreen('complete');
+  showToast('🏆 Lesson Complete! +' + totalXPEarned + ' XP');
+}
+
+// ══════════════ DAILY CHALLENGE ══════════════
+function startDailyChallenge() {
+  state.dailyActive = true;
+  state.dailyQ = 0;
+  state.dailyScore = 0;
+  state.quizLesson = { id: 'daily', title: 'Daily Challenge' };
+  state.lessonXP = 0;
+
+  // Use daily questions in quiz screen
+  const dlLesson = { id: 'daily_override', title: 'Daily Challenge — Constantinople' };
+  state.quizLesson = dlLesson;
+  state.quizQ = 0;
+  state.quizScore = 0;
+  state.quizAnswered = false;
+  renderDailyQuizQ();
+  showScreen('quiz');
+  document.querySelector('#screen-quiz .page-title').textContent = '⚔️ Daily Challenge';
+}
+
+function renderDailyQuizQ() {
+  const qs = DAILY_QUESTIONS;
+  const q = qs[state.quizQ];
+  const total = qs.length;
+  document.getElementById('quiz-q-num').textContent = `Question ${state.quizQ+1} of ${total}`;
+  document.getElementById('quiz-question').textContent = q.q;
+  document.getElementById('quiz-score-badge').textContent = `${state.quizScore}/${state.quizQ}`;
+  document.getElementById('quiz-progress').style.width = `${(state.quizQ/total)*100}%`;
+  document.getElementById('quiz-feedback').className = 'quiz-feedback';
+  document.getElementById('quiz-next-btn').disabled = true;
+  state.quizAnswered = false;
+
+  const opts = document.getElementById('quiz-options');
+  opts.innerHTML = q.opts.map((o,i) => `
+    <button class="quiz-opt" onclick="answerDailyQ(${i})" id="qopt-${i}">
+      <div class="quiz-letter">${String.fromCharCode(65+i)}</div>
+      <span>${o}</span>
+    </button>
+  `).join('');
+
+  document.getElementById('quiz-next-btn').onclick = () => {
+    if (state.quizQ < DAILY_QUESTIONS.length - 1) {
+      state.quizQ++;
+      renderDailyQuizQ();
+    } else {
+      finishDailyChallenge();
+    }
+  };
+  document.querySelector('#screen-quiz .btn-outline').onclick = () => {
+    if (state.quizQ < DAILY_QUESTIONS.length - 1) {
+      state.quizQ++;
+      renderDailyQuizQ();
+    } else {
+      finishDailyChallenge();
+    }
+  };
+}
+
+function answerDailyQ(idx) {
+  if (state.quizAnswered) return;
+  state.quizAnswered = true;
+  const q = DAILY_QUESTIONS[state.quizQ];
+  const correct = idx === q.ans;
+  if (correct) state.quizScore++;
+
+  q.opts.forEach((_,i) => {
+    const el = document.getElementById('qopt-'+i);
+    if (!el) return;
+    if (i === q.ans) el.className = 'quiz-opt correct';
+    else if (i === idx && !correct) el.className = 'quiz-opt wrong';
+    else el.className = 'quiz-opt dimmed';
+  });
+
+  const fb = document.getElementById('quiz-feedback');
+  fb.innerHTML = `<strong style="color:${correct?'#7DD87D':'#E07070'}">${correct?'✓ Correct!':'✗ Not quite.'}</strong> ${q.exp}`;
+  fb.className = 'quiz-feedback show';
+  document.getElementById('quiz-next-btn').disabled = false;
+  document.getElementById('quiz-score-badge').textContent = `${state.quizScore}/${state.quizQ+1}`;
+  if (correct) showXPFloat(40, true);
+}
+
+function finishDailyChallenge() {
+  const pct = Math.round((state.quizScore / DAILY_QUESTIONS.length) * 100);
+  const xp = state.quizScore * 40;
+  state.totalXP += xp;
+  document.getElementById('complete-title').textContent = pct === 100 ? 'Gauntlet Cleared!' : 'Challenge Complete!';
+  document.getElementById('complete-sub').textContent = `Daily Challenge — ${state.quizScore}/${DAILY_QUESTIONS.length} correct`;
+  document.getElementById('comp-xp').textContent = '+' + xp;
+  document.getElementById('comp-score').textContent = pct + '%';
+  document.getElementById('complete-trophy').textContent = pct >= 80 ? '🗡️' : '📜';
+  document.querySelector('#screen-quiz .page-title').textContent = 'Knowledge Check';
+  document.getElementById('quiz-next-btn').onclick = quizNext;
+  document.querySelector('#screen-quiz .btn-outline').onclick = skipQuizQ;
+  showScreen('complete');
+  showToast('⚔️ Challenge Complete! +' + xp + ' XP');
+}
+
+// ══════════════ SKILL TREE ══════════════
+function renderTree(filter) {
+  filter = filter || state.treeFilter;
+  const el = document.getElementById('tree-content');
+  let html = '';
+  SKILL_TREE.forEach(era => {
+    if (filter !== 'all' && era.era !== filter) return;
+    html += `<div class="tree-era"><div class="era-title">${ERA_LABELS[era.era]}</div><div class="tree-nodes">`;
+    era.nodes.forEach(node => {
+      const statusIcon = node.status === 'mastered' ? '✓' : node.status === 'unlocked' ? '◆' : '🔒';
+      html += `
+        <div class="tree-node ${node.status}" onclick="${node.status!=='locked'?`showTreeModal('${node.name}','${era.era}')`:``}">
+          <div class="tn-icon">${node.icon}</div>
+          <div class="tn-name">${node.name}</div>
+          <div class="tn-progress"><div class="tn-fill ${era.era}" style="width:${node.prog}%"></div></div>
+          <div class="tn-status">${statusIcon}</div>
+        </div>
+      `;
+    });
+    html += '</div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function filterTree(f, btn) {
+  state.treeFilter = f;
+  document.querySelectorAll('.tree-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderTree(f);
+}
+
+function showTreeModal(name, era) {
+  const node = SKILL_TREE.find(e=>e.era===era)?.nodes.find(n=>n.name===name);
+  if (!node) return;
+  document.getElementById('modal-title').textContent = node.icon + ' ' + name;
+  document.getElementById('modal-body').textContent = node.status === 'mastered'
+    ? `You've mastered this topic! ${node.prog}% complete. Review to keep your knowledge sharp.`
+    : `${node.prog}% complete. Continue studying ${ERA_LABELS[era]} to deepen your understanding of ${name}.`;
+  document.getElementById('modal-action-btn').textContent = node.status === 'mastered' ? 'Review Lessons' : 'Continue Learning';
+  document.getElementById('modal-action-btn').onclick = () => { closeModal(); showScreen('learn'); };
+  document.getElementById('modal').style.display = 'flex';
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal')) {
+    document.getElementById('modal').style.display = 'none';
+  }
+}
+
+// ══════════════ LEADERBOARD ══════════════
+function renderLeaderboard() {
+  const el = document.getElementById('leaderboard-rows');
+  if (!el) return;
+  const rankClass = ['top1','top2','top3'];
+  el.innerHTML = LEADERBOARD.map((r,i) => `
+    <div class="lb-row ${r.you?'you':''}">
+      <div class="lb-rank ${i<3?rankClass[i]:'other'}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+      <div class="lb-avatar" style="${r.you?'border-color:var(--gold-dim);background:rgba(201,168,76,.1);color:var(--gold)':''}">${r.init}</div>
+      <div class="lb-name" style="${r.you?'color:var(--gold);font-weight:600':''}">${r.name}</div>
+      <div style="text-align:right">
+        <div class="lb-score">${r.score}</div>
+        <div class="lb-streak">🔥${r.streak}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════ TIMER ══════════════
+function startTimer() {
+  function tick() {
+    const el = document.getElementById('daily-timer');
+    if (!el) return;
+    const parts = el.textContent.split(':').map(Number);
+    let [h,m,s] = parts;
+    s--;
+    if (s < 0) { s = 59; m--; }
+    if (m < 0) { m = 59; h--; }
+    if (h < 0) { h = 23; m = 59; s = 59; }
+    el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  setInterval(tick, 1000);
+}
+
+// ══════════════ TOAST ══════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  const parts = msg.match(/^([\u{1F000}-\u{1FFFF}]|[\u2600-\u27FF]|[⭐🏆⚔️📖🔒])\s*(.*)/u);
+  if (parts) {
+    document.getElementById('toast-icon').textContent = parts[1];
+    document.getElementById('toast-msg').textContent = parts[2];
+  } else {
+    document.getElementById('toast-icon').textContent = '⭐';
+    document.getElementById('toast-msg').textContent = msg;
+  }
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ══════════════ XP FLOAT ══════════════
+function showXPFloat(xp, good) {
+  const el = document.createElement('div');
+  el.className = 'xp-float';
+  el.textContent = (good ? '+' : '') + xp + ' XP';
+  el.style.cssText = `top:${40+Math.random()*20}%;left:${30+Math.random()*40}%;color:${good?'var(--gold)':'var(--stone-light)'}`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1300);
+}
+</script>
+</body>
+</html>
